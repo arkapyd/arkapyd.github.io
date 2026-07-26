@@ -2,15 +2,398 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>arkapyd</title>
-    
-    <!-- paste your exact google adsense script tag below this line -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#f3ebda">
+
+    <title>Cricket Atlas — the endless cricketer name-chain word game</title>
+    <meta name="description" content="Cricket Atlas is a free browser word game for cricket fans. Take turns naming real cricketers, each starting with the last letter of the previous name, verified live against Wikipedia and ESPNcricinfo. Beat the clock, earn Career Points, and rank up from gully cricketer to national captain.">
+    <meta name="author" content="Cricket Atlas">
+    <link rel="canonical" href="https://arkapyd.github.io/cricatlas/">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database-compat.js"></script>
+
+    <!-- H5 Games Ads. In a browser this serves AdSense; inside the AdMob-registered
+         WebView wrapper (H5AdsWebViewClient + registerWebView), the SAME adBreak()
+         calls are served as AdMob ads via the two slots declared below.
+         NOTE: remove data-adbreak-test="on" for the production release. -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2035524382353942"
-     crossorigin="anonymous"></script>
+        data-adbreak-test="on"
+        data-admob-interstitial-slot="ca-app-pub-2035524382353942/7450754765"
+        data-admob-rewarded-slot="ca-app-pub-2035524382353942/2293916996"
+        crossorigin="anonymous"></script>
+    <script>
+        window.adsbygoogle = window.adsbygoogle || [];
+        window.adBreak = window.adConfig = function (o) { window.adsbygoogle.push(o); };
+        adConfig({
+            preloadAdBreaks: 'on',
+            sound: 'on',
+            onReady: function () { console.log("H5 Ad API is ready."); }
+        });
+    </script>
 </head>
 <body>
-    <h1>project landing page</h1>
-    <p>looking for the cricket game? visit <a href="/cricatlas/">cricatlas</a></p>
+    <div id="app-container">
+
+        <!-- ===================== AUTH ===================== -->
+        <div id="auth-view" class="view active">
+            <div class="auth-shell">
+                <div class="hero">
+                    <div class="hero-mark">
+                        <span class="hero-line1">CRICKET</span>
+                        <span class="hero-line2">ATLAS</span>
+                    </div>
+                    <p class="hero-tag">the endless cricketer name chain</p>
+                </div>
+                <div class="auth-card">
+                    <button id="google-login-btn" class="btn btn-primary btn-block">
+                        <span class="btn-ico">🏏</span> Sign in with Google
+                    </button>
+                    <p class="fineprint">Sign in to track your career and climb the ranks.</p>
+                </div>
+
+                <!-- Static landing content: visible to every visitor without signing in,
+                     so the game is more than a bare login screen. -->
+                <section class="landing-info">
+                    <h1 class="landing-title">What is Cricket Atlas?</h1>
+                    <p>
+                        Cricket Atlas is a free browser word game for cricket fans. You and an
+                        opponent — a friend online, or the built-in engine offline — take turns
+                        naming real cricketers, each name starting with the last letter of the one
+                        before it. Every player you name is checked live against Wikipedia and
+                        ESPNcricinfo, so only genuine cricketers count. Get it wrong, run out the
+                        clock, or repeat a name, and you lose a life.
+                    </p>
+
+                    <h2 class="landing-subtitle">How a game works</h2>
+                    <ul class="landing-list">
+                        <li><b>Chain the names.</b> Type a cricketer whose name starts with the last
+                            letter of the previous one — e.g. Sachin Tendulka<b>r</b> &rarr;
+                            <b>R</b>ohit Sharma.</li>
+                        <li><b>Beat the clock.</b> A turn timer and three lives keep every match
+                            fast — a wrong or unverifiable name, or running out of time, costs a life.</li>
+                        <li><b>Choose your difficulty and category.</b> Easy accepts initials; Medium
+                            and Hard require full first names. Restrict play to international,
+                            domestic, men's, or women's cricketers as you unlock them.</li>
+                        <li><b>Earn Career Points and rank up.</b> Every valid name scores CP —
+                            older, more historic players score more. Enough CP promotes you from
+                            gully cricketer all the way to national team captain, unlocking the
+                            restricted categories along the way.</li>
+                    </ul>
+
+                    <h2 class="landing-subtitle">Frequently asked questions</h2>
+                    <div class="faq">
+                        <div class="faq-item">
+                            <h3>Is Cricket Atlas free to play?</h3>
+                            <p>Yes. Cricket Atlas is completely free to play in your web browser on
+                            phone, tablet, or desktop. The game is supported by advertising.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>Do I need an account?</h3>
+                            <p>You sign in with your Google account so the game can save your Career
+                            Points and rank between sessions, and so you can play ranked or private
+                            online matches. Your sign-in is only used for these features — see the
+                            <a href="./privacy.html">privacy policy</a> for details.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>How are player names verified?</h3>
+                            <p>When you enter a name, Cricket Atlas looks it up in real time against
+                            Wikipedia and ESPNcricinfo to confirm the person is a genuine cricketer
+                            before the name is accepted. This is also how the game recognises players
+                            across spellings, initials, and alternate names.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>Can I play against the computer?</h3>
+                            <p>Yes. The offline mode pits you against a built-in engine that plays
+                            real cricketers on its own shot clock, so you can practise or play solo
+                            any time. Online multiplayer against other people is coming soon.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>What are Career Points and ranks?</h3>
+                            <p>Career Points (CP) are scored for every valid cricketer you name, with
+                            historic players worth more. As your CP grows you climb a 21-rank career
+                            ladder — from gully cricketer to national team captain — and unlock
+                            special categories such as international-only and women's-only play.</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>Does it work on mobile?</h3>
+                            <p>Yes. Cricket Atlas runs in any modern mobile browser and can be
+                            installed to your home screen to play like an app, including offline
+                            against the engine.</p>
+                        </div>
+                    </div>
+
+                    <footer class="landing-footer">
+                        <p>Cricket Atlas is an independent, fan-made cricket word game.</p>
+                        <p>
+                            <a href="./privacy.html">Privacy Policy</a>
+                            &nbsp;·&nbsp;
+                            Contact: <a href="mailto:[YOUR-EMAIL]">[YOUR-EMAIL]</a>
+                        </p>
+                        <p class="copyright">© 2026 Cricket Atlas. All rights reserved.</p>
+                    </footer>
+                </section>
+            </div>
+        </div>
+
+        <!-- ===================== MAIN MENU ===================== -->
+        <div id="welcome-view" class="view" style="display: none;">
+            <div class="app-bar">
+                <div class="app-bar-brand">CRICKET&nbsp;ATLAS</div>
+                <div class="app-bar-user">
+                    <button id="install-app-btn" class="chip chip-install hide-element">Install</button>
+                    <span id="player-name-display" class="user-name">player</span>
+                    <span class="chip chip-cp" id="user-cp-display">0.0 CP</span>
+                    <button id="logout-btn" class="icon-text-btn">Sign out</button>
+                </div>
+            </div>
+
+            <div class="scroll-body">
+                <div class="menu-hero">
+                    <div class="hero-mark small">
+                        <span class="hero-line1">CRICKET</span>
+                        <span class="hero-line2">ATLAS</span>
+                    </div>
+                </div>
+
+                <div id="main-menu" class="menu-stack">
+                    <button id="btn-offline" class="btn btn-primary btn-play">
+                        <span class="btn-play-ico">🏏</span>
+                        <span class="btn-play-text">
+                            <span class="btn-play-title">Play offline</span>
+                            <span class="btn-play-sub">vs the engine</span>
+                        </span>
+                    </button>
+                    <button id="btn-online" class="btn btn-ghost btn-play">
+                        <span class="btn-play-ico">🌐</span>
+                        <span class="btn-play-text">
+                            <span class="btn-play-title">Play online</span>
+                            <span class="btn-play-sub">coming soon</span>
+                        </span>
+                    </button>
+
+                    <!-- dashboard: how to play / career / settings -->
+                    <div class="dash">
+                        <div class="segbar" role="tablist">
+                            <button class="tab-btn" data-target="how-to-play-tab">How to play</button>
+                            <button class="tab-btn active" data-target="career-tab">Career</button>
+                            <button class="tab-btn" data-target="settings-tab">Settings</button>
+                        </div>
+
+                        <div class="dash-body">
+                            <!-- how to play -->
+                            <div id="how-to-play-tab" class="tab-pane hide-element">
+                                <ul class="rules">
+                                    <li><b>Chain the names.</b> Type a cricketer whose name starts with the last letter of the previous one.</li>
+                                    <li><b>Beat the clock.</b> 60 seconds a turn, 3 lives. A timeout or an invalid name costs a life.</li>
+                                    <li><b>Earn CP.</b> Valid names score Career Points — older players (pre-2000, pre-1980) are worth more.</li>
+                                    <li><b>Rank up.</b> Enough CP promotes you from gully cricketer all the way to national captain.</li>
+                                </ul>
+                                <div class="advisory">
+                                    <div class="advisory-title">A work in progress — thanks for bearing with it 🙏</div>
+                                    <p>Every name is checked against a free, open-source database of <b>19,000+ cricketers</b> plus live web lookups, so a response can take a few seconds — the engine's first move of a session is the slowest.</p>
+                                    <p>The game <b>learns as it plays</b>: names it verifies get pushed back into its database, so it keeps getting faster and recognising more players over time.</p>
+                                    <p>Spellings can be <b>finicky</b> — transliterated names, bare initials, hyphens and particles (like the "-ul-" in Naveen-ul-Haq) sometimes need the full first name or an alternate spelling to be recognised.</p>
+                                    <p>In short, Cricket Atlas is always improving — sorry in advance for the rough edges.</p>
+                                </div>
+                            </div>
+
+                            <!-- career -->
+                            <div id="career-tab" class="tab-pane active-pane">
+                                <div class="career">
+                                    <div class="career-rank" id="career-rank-title">gully cricketer</div>
+                                    <div class="career-cp"><span id="career-cp-value">0</span> CP</div>
+                                    <div class="track"><div id="career-progress-fill" class="track-fill"></div></div>
+                                    <div class="career-next">
+                                        Next: <span id="next-rank-title">school cricketer</span>
+                                        <span id="cp-remaining-text">(25 CP needed)</span>
+                                    </div>
+                                    <div id="next-unlock-note" class="next-unlock hide-element"></div>
+                                </div>
+                            </div>
+
+                            <!-- settings -->
+                            <div id="settings-tab" class="tab-pane hide-element">
+                                <div class="setting-block">
+                                    <span class="setting-label">Difficulty</span>
+                                    <div class="segmented">
+                                        <button class="diff-btn active" data-mode="easy">Easy</button>
+                                        <button class="diff-btn" data-mode="medium">Medium</button>
+                                        <button class="diff-btn" data-mode="hard">Hard</button>
+                                    </div>
+                                </div>
+                                <div class="setting-block">
+                                    <span class="setting-label">Category</span>
+                                    <div class="pills">
+                                        <button class="cat-btn active" data-category="general">General</button>
+                                        <button class="cat-btn" data-category="intl">International</button>
+                                        <button class="cat-btn" data-category="domestic">Domestic</button>
+                                        <button class="cat-btn" data-category="men">Men</button>
+                                        <button class="cat-btn" data-category="women">Women</button>
+                                    </div>
+                                </div>
+                                <p id="mode-help-text" class="mode-help">
+                                    <span>Easy · General</span> Standard name chain. Initials accepted.
+                                </p>
+                                <button id="reset-career-btn" class="btn reset-career-btn">Reset career progress</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- hidden stub: app.js binds a listener to this id (was the old setup screen's back button) -->
+            <button id="back-to-main-btn" class="hide-element" aria-hidden="true"></button>
+        </div>
+
+        <!-- ===================== LOBBY ===================== -->
+        <div id="lobby-view" class="view" style="display: none;">
+            <div class="app-bar">
+                <div class="app-bar-brand">
+                    <button id="back-from-lobby-btn" class="icon-text-btn">‹ Back</button>
+                </div>
+                <div class="app-bar-user">
+                    <span id="lobby-player-name" class="user-name">player</span>
+                    <button id="leave-game-btn" class="icon-text-btn danger hide-element">Leave</button>
+                </div>
+            </div>
+
+            <div class="scroll-body">
+                <div class="lobby-card">
+                    <div class="lobby-eyebrow">Ranked</div>
+                    <h2 class="lobby-title">Find an opponent</h2>
+                    <p class="lobby-desc">Easy · General. Initials allowed, 60 seconds a turn.</p>
+                    <button id="find-match-btn" class="btn btn-primary btn-block">Find match</button>
+                    <div id="lobby-status" class="status-line"></div>
+                </div>
+
+                <div class="or-divider"><span>or play a friend</span></div>
+
+                <div class="private-card">
+                    <button id="btn-create-private" class="btn btn-ghost btn-block">Create private room</button>
+                    <div id="private-code-display" class="code-badge hide-element"></div>
+                    <div class="join-row">
+                        <input type="text" id="private-code-input" placeholder="4-digit code" maxlength="4" inputmode="numeric">
+                        <button id="btn-join-private" class="btn btn-ghost">Join</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== GAME ===================== -->
+        <div id="game-view" class="view" style="display: none;">
+            <div class="game-top">
+                <div class="side opp">
+                    <span class="side-name" id="opponent-name">CPU</span>
+                    <span class="lives" id="opponent-lives" style="display:none;">♥♥♥</span>
+                </div>
+                <div class="vs">
+                    <span class="vs-mark">VS</span>
+                    <span class="chain-badge">Chain <b id="score">0</b></span>
+                </div>
+                <div class="side you">
+                    <span class="side-name">You</span>
+                    <span class="lives" id="your-lives">♥♥♥</span>
+                </div>
+            </div>
+            <button id="exit-game-btn" class="exit-link">Exit game</button>
+
+            <div class="status-strip">
+                <div class="status-cell">
+                    <div class="status-cap" id="turn-indicator">engine active</div>
+                    <div id="game-status" class="big-letter">…</div>
+                </div>
+                <div class="status-cell right">
+                    <div class="status-cap">Timer</div>
+                    <div id="timer-display" class="big-letter">--</div>
+                </div>
+            </div>
+
+            <div id="chain-list" class="feed"></div>
+
+            <div class="input-dock">
+                <div id="message" class="status-line">// awaiting input…</div>
+
+                <div class="input-row" id="play-input-group">
+                    <input type="text" id="player-input" placeholder="Type a cricketer…" autocomplete="off" disabled>
+                    <button id="submit-btn" class="send-btn" disabled>➤</button>
+                </div>
+
+                <div id="game-over-panel" class="hide-element">
+                    <button id="btn-return-main" class="btn btn-ghost btn-block">Return to menu</button>
+                    <div id="revive-container" class="revive hide-element">
+                        <p class="revive-text">Out of lives — revive <span id="revives-left">3</span> more times?</p>
+                        <div class="revive-row">
+                            <button id="reward-ad-btn" class="btn btn-primary">Watch ad · +1 life</button>
+                            <button id="decline-revive-btn" class="btn btn-ghost">Accept defeat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- exit game (offline) confirm modal -->
+    <div id="exit-confirm-modal" class="modal-overlay hide-element">
+        <div class="modal-box">
+            <h3 class="modal-title">Exit game?</h3>
+            <p class="modal-text">Your current chain will end and this game won't be saved — you'll start fresh next time. CP you've already earned is kept.</p>
+            <div class="modal-row">
+                <button id="exit-no-btn" class="btn btn-ghost">Keep playing</button>
+                <button id="exit-yes-btn" class="btn btn-danger">Exit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- reset career confirm modal -->
+    <div id="reset-confirm-modal" class="modal-overlay hide-element">
+        <div class="modal-box">
+            <h3 class="modal-title">Reset career?</h3>
+            <p class="modal-text">This resets your CP and rank to zero and re-locks the special modes. It can't be undone.</p>
+            <div class="modal-row">
+                <button id="reset-no-btn" class="btn btn-ghost">Cancel</button>
+                <button id="reset-yes-btn" class="btn btn-danger">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- career path modal -->
+    <div id="career-modal" class="modal-overlay hide-element">
+        <div class="modal-box career-modal-box">
+            <h3 class="modal-title">Career Path</h3>
+            <p class="modal-text">Earn CP to climb the ranks. Some modes unlock as you rise.</p>
+            <div id="career-ladder" class="career-ladder"></div>
+            <button id="career-modal-close" class="btn btn-primary btn-block">Close</button>
+        </div>
+    </div>
+
+    <!-- forfeit confirm modal -->
+    <div id="leave-confirm-modal" class="modal-overlay hide-element">
+        <div class="modal-box">
+            <h3 class="modal-title">Forfeit match?</h3>
+            <p class="modal-text">Leaving now loses every point and all CP from this chain.</p>
+            <div class="modal-row">
+                <button id="leave-no-btn" class="btn btn-ghost">Cancel</button>
+                <button id="leave-yes-btn" class="btn btn-danger">Forfeit</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
 </html>
